@@ -1,0 +1,124 @@
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+    ],
+    "id": "/api/vc/customers/e70b27f0-de54-4fff-af26-20ea945ffdf7/members/83a52552-1b66-4abe-8c67-2de9954d6c8f/accounts",
+    "type": [
+        "VerifiableCredential",
+        "BankAccountCredential"
+    ],
+    "issuer": "did:ion:EiDPbz2t9aw5u8GRCRyyY090Gk3vSHmsZFLYgVnBurOMEw",
+    "issuanceDate": "2023-09-19T15:10:12.171526371Z",
+    "credentialSubject": {
+        "accounts": [
+            {
+                "depositeAccount": {
+                    "accountId": "12e1e4dd-2d8f-4862-89ec-618a763ad0ce",
+                    "accountNumber": "98765",
+                    "accountNumberDisplay": "98765",
+                    "accountType": "Investment",
+                    "balanceAsOf": "2023-09-19T15:09:57.813",
+                    "balanceType": "ASSET",
+                    "currency": "",
+                    "currentBalance": 2000,
+                    "fiAttributes": {
+                        "customerID": "e70b27f0-de54-4fff-af26-20ea945ffdf7",
+                        "memberId": "83a52552-1b66-4abe-8c67-2de9954d6c8f"
+                    },
+                    "interestRate": 0,
+                    "nickname": "Holdings",
+                    "status": "Untracked"
+                }
+            },
+            {
+                "depositeAccount": {
+                    "accountId": "5c1af992-c06f-4e35-8848-7309f77ecff2",
+                    "accountNumber": "12345",
+                    "accountNumberDisplay": "12345",
+                    "accountType": "Insurance",
+                    "availableBalance": 0,
+                    "balanceAsOf": "2023-09-19T15:09:57.813",
+                    "balanceType": "ASSET",
+                    "currency": "",
+                    "currentBalance": 5000,
+                    "fiAttributes": {
+                        "customerID": "e70b27f0-de54-4fff-af26-20ea945ffdf7",
+                        "memberId": "83a52552-1b66-4abe-8c67-2de9954d6c8f"
+                    },
+                    "interestRate": 0,
+                    "nickname": "Life Insurance",
+                    "status": "Untracked"
+                }
+            },
+            {
+                "depositeAccount": {
+                    "accountId": "2e79d884-9cec-4aaf-80d4-a136d269fc83",
+                    "accountNumber": "1234",
+                    "accountNumberDisplay": "1234",
+                    "accountType": "Checking",
+                    "availableBalance": 100,
+                    "balanceAsOf": "2023-09-19T15:09:57.813",
+                    "balanceType": "ASSET",
+                    "currency": "",
+                    "currentBalance": 100,
+                    "fiAttributes": {
+                        "customerID": "e70b27f0-de54-4fff-af26-20ea945ffdf7",
+                        "memberId": "83a52552-1b66-4abe-8c67-2de9954d6c8f"
+                    },
+                    "interestRate": 0,
+                    "nickname": "Primary Checking",
+                    "status": "Untracked"
+                }
+            },
+            {
+                "depositeAccount": {
+                    "accountId": "e5ca5ae2-f4ff-4765-a543-bc12c3aa6f27",
+                    "accountNumber": "1234",
+                    "accountNumberDisplay": "1234",
+                    "accountType": "Credit_Card",
+                    "availableBalance": 0,
+                    "balanceAsOf": "2023-09-19T15:09:57.813",
+                    "balanceType": "ASSET",
+                    "currency": "",
+                    "currentBalance": 0,
+                    "fiAttributes": {
+                        "customerID": "e70b27f0-de54-4fff-af26-20ea945ffdf7",
+                        "memberId": "83a52552-1b66-4abe-8c67-2de9954d6c8f"
+                    },
+                    "interestRate": 0,
+                    "nickname": "Credit Card",
+                    "status": "Untracked"
+                }
+            },
+            {
+                "depositeAccount": {
+                    "accountId": "a9bc3beb-d79c-4bbb-bdaa-e43826aeebc7",
+                    "accountNumber": "5678",
+                    "accountNumberDisplay": "5678",
+                    "accountType": "Savings",
+                    "availableBalance": 900,
+                    "balanceAsOf": "2023-09-19T15:09:57.813",
+                    "balanceType": "ASSET",
+                    "currency": "",
+                    "currentBalance": 1000,
+                    "fiAttributes": {
+                        "customerID": "e70b27f0-de54-4fff-af26-20ea945ffdf7",
+                        "memberId": "83a52552-1b66-4abe-8c67-2de9954d6c8f"
+                    },
+                    "interestRate": 0,
+                    "nickname": "Savings",
+                    "status": "Untracked"
+                }
+            }
+        ],
+        "id": "https://api.sophtron.com/api/v3/customers/e70b27f0-de54-4fff-af26-20ea945ffdf7/members/83a52552-1b66-4abe-8c67-2de9954d6c8f/accounts"
+    },
+    "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-09-19T15:10:12Z",
+        "jws": "eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJraWQiOiJkaWQ6aW9uOkVpRFBiejJ0OWF3NXU4R1JDUnl5WTA5MEdrM3ZTSG1zWkZMWWdWbkJ1ck9NRXcifQ..8LUIdmSlqbBOYGPeDNXeWZFUxga8wwcHw-BfoD6xE5rUBLAE98Xme10upjM1h8ps6zM264mJxurqYI3nqKNxTA",
+        "proofPurpose": "assertionMethod",
+        "verificationMethod": "did:ion:EiDPbz2t9aw5u8GRCRyyY090Gk3vSHmsZFLYgVnBurOMEw"
+    }
+}

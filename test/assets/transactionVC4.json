@@ -1,0 +1,24 @@
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+    ],
+    "id": "/api/vc/customers/e70b27f0-de54-4fff-af26-20ea945ffdf7/accounts/e5ca5ae2-f4ff-4765-a543-bc12c3aa6f27/transactions",
+    "type": [
+        "VerifiableCredential",
+        "BankAccountCredential"
+    ],
+    "issuer": "did:ion:EiDPbz2t9aw5u8GRCRyyY090Gk3vSHmsZFLYgVnBurOMEw",
+    "issuanceDate": "2023-09-19T15:10:19.395690275Z",
+    "credentialSubject": {
+        "id": "https://api.sophtron.com/api/v3/customers/e70b27f0-de54-4fff-af26-20ea945ffdf7/accounts/e5ca5ae2-f4ff-4765-a543-bc12c3aa6f27/transactions",
+        "transactions": []
+    },
+    "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-09-19T15:10:19Z",
+        "jws": "eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJraWQiOiJkaWQ6aW9uOkVpRFBiejJ0OWF3NXU4R1JDUnl5WTA5MEdrM3ZTSG1zWkZMWWdWbkJ1ck9NRXcifQ..oPS-3qu9ueWYoBcvcN5tYRHnyK3br_TcSDT63LyXGw8R3inznRYAs2NNQbFOS-1hi8w-Aeh-VgKCKKiYypqQmA",
+        "proofPurpose": "assertionMethod",
+        "verificationMethod": "did:ion:EiDPbz2t9aw5u8GRCRyyY090Gk3vSHmsZFLYgVnBurOMEw"
+    }
+}

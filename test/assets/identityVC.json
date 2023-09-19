@@ -1,0 +1,83 @@
+{
+    "@context": [
+        "https://www.w3.org/2018/credentials/v1",
+        "https://www.w3.org/2018/credentials/examples/v1"
+    ],
+    "id": "/api/vc/customers/e70b27f0-de54-4fff-af26-20ea945ffdf7/members/cb4904b8-6d16-4b34-aa9c-144916813217/identity",
+    "type": [
+        "VerifiableCredential",
+        "IdentityCredential"
+    ],
+    "issuer": "did:ion:EiDPbz2t9aw5u8GRCRyyY090Gk3vSHmsZFLYgVnBurOMEw",
+    "issuanceDate": "2023-09-18T17:06:11.206061542Z",
+    "credentialSubject": {
+        "customer": {
+            "accounts": [
+                {
+                    "accountId": "c5358052-073b-41f6-afc8-2f5413931879",
+                    "relationship": "owner"
+                },
+                {
+                    "accountId": "d71e8dd6-fee5-498f-b853-42c15ec7e25b",
+                    "relationship": "owner"
+                },
+                {
+                    "accountId": "1376d1fa-239e-4c02-96e2-572bbb3c8df3",
+                    "relationship": "owner"
+                },
+                {
+                    "accountId": "e6ffb8df-4e76-4052-afe1-a6611941654c",
+                    "relationship": "owner"
+                },
+                {
+                    "accountId": "21d06129-09ac-4b63-a515-e55563cab6ea",
+                    "relationship": "owner"
+                }
+            ],
+            "addresses": [
+                {
+                    "city": "KIRKLAND",
+                    "country": "US",
+                    "line1": "1234 MAIN ST",
+                    "postalCode": "",
+                    "state": "WA"
+                }
+            ],
+            "customerId": "cb4904b8-6d16-4b34-aa9c-144916813217",
+            "email": [
+                "test@test.com",
+                "test2@test.com"
+            ],
+            "fiAttributes": {
+                "customerID": "e70b27f0-de54-4fff-af26-20ea945ffdf7"
+            },
+            "name": {
+                "first": "John",
+                "last": "Smith",
+                "middle": "",
+                "prefix": "",
+                "suffix": ""
+            },
+            "phone": [
+                {
+                    "country": "US",
+                    "number": "123-456-7890",
+                    "type": "HOME"
+                },
+                {
+                    "country": "US",
+                    "number": "098-765-4321",
+                    "type": "HOME"
+                }
+            ]
+        },
+        "id": "https://api.sophtron.com/api/v3/customers/e70b27f0-de54-4fff-af26-20ea945ffdf7/members/cb4904b8-6d16-4b34-aa9c-144916813217/identity"
+    },
+    "proof": {
+        "type": "JsonWebSignature2020",
+        "created": "2023-09-18T17:06:11Z",
+        "jws": "eyJhbGciOiJFUzI1NksiLCJiNjQiOmZhbHNlLCJjcml0IjpbImI2NCJdLCJraWQiOiJkaWQ6aW9uOkVpRFBiejJ0OWF3NXU4R1JDUnl5WTA5MEdrM3ZTSG1zWkZMWWdWbkJ1ck9NRXcifQ..5lQU5sXv3QBCvf0hUA8PfCjSM7cvYjcUV18txG79djg36ZAx_FL2VbJR1UP6OtqLQu9TWIv6PentL0jcxGII1A",
+        "proofPurpose": "assertionMethod",
+        "verificationMethod": "did:ion:EiDPbz2t9aw5u8GRCRyyY090Gk3vSHmsZFLYgVnBurOMEw"
+    }
+}
