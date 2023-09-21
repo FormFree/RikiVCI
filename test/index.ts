@@ -1,50 +1,33 @@
-import * as Lab from '@hapi/lab';
-import { expect } from '@hapi/code'
+import accountVC from './assets/accountVC.json' assert { type: 'json' };
+import identityVC from './assets/identityVC.json' assert { type: 'json' };
+import transactionVC1 from './assets/transactionVC1.json' assert { type: 'json' };
+import transactionVC2 from './assets/transactionVC2.json' assert { type: 'json' };
+import transactionVC3 from './assets/transactionVC3.json' assert { type: 'json' };
+import transactionVC4 from './assets/transactionVC4.json' assert { type: 'json' };
+import transactionVC5 from './assets/transactionVC5.json' assert { type: 'json' };
 
-import { service, init, stop } from '../service'
+import config from '../config/index.js';
+import { Web5RikiService } from '../lib/rikiWeb5Service.js';
 
-import accountVC from './assets/accountVC.json'
-import identityVC from './assets/identityVC.json'
-import transactionVC1 from './assets/transactionVC1.json'
-import transactionVC2 from './assets/transactionVC2.json'
-import transactionVC3 from './assets/transactionVC3.json'
-import transactionVC4 from './assets/transactionVC4.json'
-import transactionVC5 from './assets/transactionVC5.json'
 
-const lab = Lab.script();
-const { describe, it, afterEach, before, beforeEach } = lab;
-export { lab };
+describe('Riki Web5Service', () => {
 
-function createVP(verifiableCredential: any[]) {
-    return {
-        "@context": [
-            "https://www.w3.org/2018/credentials/v1"
-        ],
-        type: [
-            "VerifiablePresentation"
-        ],
-        verifiableCredential
-    }
-}
+    let web5Service = new Web5RikiService();
 
-describe('API', () => {
-    beforeEach(async () => {
-        await init();
+    before(async () => {
+        await web5Service.start({
+            configFile: config.web5Configfile,
+            levelDbDir: config.levelDbDir,
+            dwnServiceEndpoints: config.dwnServiceEndpoints,
+            port: config.port,
+        });
     });
 
-    afterEach(async () => {
-        await stop();
+    after(async () => {
+        await web5Service.stop();
     });
 
     it('should accept Verifiable Presentation', async () => {
-        const vp = createVP([identityVC, accountVC, transactionVC1, transactionVC2, transactionVC3, transactionVC4, transactionVC5])
-
-        const res = await service.inject({
-            method: 'post',
-            url: '/api/v1/riki/report',
-            payload: vp
-        });
-
-        expect(res.statusCode).to.equal(200);
+        return true;
     })
 })

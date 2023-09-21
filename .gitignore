@@ -4,3 +4,10 @@ coverage
 coverage.json
 db-data
 script.js
+/DATA
+
+.DS_Store
+
+web5-config.json
+
+.env

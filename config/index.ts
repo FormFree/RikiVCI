@@ -1,38 +1,36 @@
-import pkg from "../package.json";
+import crypto from 'crypto';
+import 'dotenv/config';
 
 const environment =
-    process.env.ENVIRONMENT || process.env.NODE_ENV || "development";
+    process.env.ENVIRONMENT || "demo"; // or development, production 
 
 let scheme = "https";
 const externalHostname = process.env.EXTERNAL_HOSTNAME || "localhost";
-const externalPort = parseInt(`${process.env.EXTERNAL_PORT}`) || 3000;
-const serviceName = process.env.SERVICE_NAME || pkg.name;
+const externalPort = parseInt(`${process.env.EXTERNAL_PORT}`) || 3001;
 
-let swaggerHost = externalHostname;
+let externalUrl = `${scheme}://${externalHostname}`;
+
 if (externalPort !== 443) {
-    swaggerHost = `${swaggerHost}:${externalPort}`;
+    scheme = "http";
+    externalUrl = `${scheme}://${externalHostname}:${externalPort}`;
 }
 
+let port = Number(process.env.PORT) || 3001;
+
 const config = {
+    dwnServiceEndpoints: process.env.DWN_ENDPOINTS ? process.env.DWN_ENDPOINTS.split(',') : ['http://localhost:' + port],
+    encryptionKey: process.env.ENCRYPTION_KEY && Buffer.from(process.env.ENCRYPTION_KEY, 'base64') || crypto.randomBytes(32),
+    environment,
     externalHostname,
-    port: Number(process.env.PORT) || 3001,
-    rikiAPI: process.env.RIKI_SERVICE_ENDPOINT || "https://x1toskusdl.execute-api.us-east-1.amazonaws.com/v1/Riki/report",
-    swagger: {
-        grouping: "tags",
-        host: swaggerHost,
-        info: {
-            title: `${serviceName} Documentation`,
-            version: pkg.version,
-        },
-        schemes: [scheme],
-        jsonPath: "/api/swagger.json",
-        documentationPath: "/api/documentation",
-        swaggerUIPath: "/api/swaggerui",
-    },
+    externalUrl,
+    levelDbDir: process.env.LEVELDB_DIR || "./DATA",
+    port,
+    rikiAPI: process.env.RIKI_SERVICE_ENDPOINT,
     trustedIssuers: [{
         name: "sophtron",
         did: "did:ion:EiDPbz2t9aw5u8GRCRyyY090Gk3vSHmsZFLYgVnBurOMEw"
-    }]
+    }],
+    web5Configfile: process.env.WEB5_CONFIG_FILE || "./web5-config.json",
 }
 
 export default config;

@@ -1,8 +1,8 @@
-# RIKI VC API
+# RIKI Web5 Service
 
-This API accepts a Verifiable Presentation of Verifiable Credentials issued by Sophtron, and transforms the request into a RIKI API request.
+This API accepts DWN Protocol messages containing Verifiable Credentials, and transforms the request into a RIKI API request.
 
-It then takes the RIKI API response and creates a new Verifiable Credential 
+It then takes the RIKI API response and creates a new Verifiable Credential and responds using the DWN Protocol
 
 ## Documentation
 
@@ -15,5 +15,3 @@ npm start
 ```
 
 This starts the service on http://localhost:3001 (or the port set using the PORT environment variable)
-
-Open a browser to http://localhost:3001/api/documentation to view and test the API
