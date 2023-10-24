@@ -43,10 +43,11 @@ export class Web5RikiService extends Web5Service {
         const { accountVCs, identityVCs, transactionVCs } = request.payload;
 
         try {
-            // @ts-ignore type is incorrect for signature?
+            // @ts-ignore type is incorrect for signature due to web5-js using dwn-sdk 0.2.1
             const signatureEntry = request.message.authorization.signatures[0];
             const senderDid = this.getJwsSignerDid(signatureEntry);
 
+            // TODO: temporarily disabled verifying vcs
             // for (const credential of [...accountVCs, ...identityVCs, ...transactionVCs]) {
             //     // TODO: Temporary fix for extra tilde
             //     let cleanedCredential = credential as string;
@@ -110,7 +111,7 @@ export class Web5RikiService extends Web5Service {
                     data: Buffer.from(data),
                     dataFormat: 'application/json',
                     protocol: rikiProtocol.message.definition.protocol,
-                    protocolPath: 'rikiCreateRequest/rikiCreateResponse',
+                    protocolPath: 'createRequest/createResponse',
                     schema: 'https://tblend.io/protocol/riki/create-response.schema.json',
                     recipient: senderDid,
                     //@ts-ignore Type is wrong?
@@ -147,90 +148,187 @@ export class Web5RikiService extends Web5Service {
     }
 
     async getRIKI(request: DwnRequest) {
-        console.log('Get Riki request', JSON.stringify(request, null, 2))
-        // const { customerId, rikiId } = req.params;
+        const { customerId, rikiId } = request.payload;
 
-        // if (!web5.identity) {
-        //     await web5.init({});
-        // }
+        // @ts-ignore type is incorrect for signature due to web5-js using dwn-sdk 0.2.1
+        const signatureEntry = request.message.authorization.signatures[0];
+        const senderDid = this.getJwsSignerDid(signatureEntry);
 
-        // let rikiResponse;
-        // if (config.environment === 'demo') {
-        //     rikiResponse = jethroRes.rikiResponse;
-        // } else {
-        //     // Request RIKI report
-        //     // Get RIKI report
-        //     const rikiResponseRaw = await fetch(`${config.rikiAPI}/${rikiId}`, {
-        //         method: 'GET',
-        //         headers: {
-        //             'Content-Type': 'application/json',
-        //             'X-CustomerId': customerId
-        //         }
-        //     })
+        // TODO: temporary for demo
+        let rikiResponse;
+        if (config.environment === 'demo') {
+            rikiResponse = jethroRes.rikiResponse;
+        } else {
+            // Get RIKI report
+            const rikiResponseRaw = await fetch(`${config.rikiAPI}/${rikiId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CustomerId': customerId
+                }
+            })
 
-        //     rikiResponse = await rikiResponseRaw.json();
-        // }
+            rikiResponse = await rikiResponseRaw.json();
+        }
 
-        // if (rikiResponse.rikiResultSet) {
+        if (rikiResponse.rikiResultSet) {
 
-        //     try {
-        //         const summaryVerifiableCredential = await web5.createVC({
-        //             credentialSubject: rikiResponse.rikiResultSet.rikiData,
-        //             subjectDid: '',
-        //             type: 'RIKIAnalyticsSummary'
-        //         });
+            try {
+                const summaryVC = await this.createVC({
+                    credentialSubject: rikiResponse.rikiResultSet.rikiData,
+                    subjectDid: '',
+                    type: 'RIKIAnalyticsSummary'
+                });
 
-        //         const message = JSON.stringify(rikiResponse.rikiResultSet);
-        //         const encrypted = encrypt(message);
+                const unencrypted = JSON.stringify(rikiResponse.rikiResultSet);
+                const encrypted = encrypt(unencrypted);
 
-        //         const encryptedVerifiableCredential = await web5.createVC({
-        //             credentialSubject: { encrypted },
-        //             subjectDid: '',
-        //             type: 'RIKIAnalyticsEncrypted'
-        //         })
+                const encryptedVC = await this.createVC({
+                    credentialSubject: { encrypted },
+                    subjectDid: '',
+                    type: 'RIKIAnalyticsEncrypted'
+                })
 
-        //         return h.response({ summaryVerifiableCredential, encryptedVerifiableCredential })
-        //     } catch (e: any) {
-        //         console.error(e)
-        //         return h.response({ error: e.message }).code(500);
-        //     }
-        // }
+                // write incoming message to dwn
+                await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
 
-        // console.log('No riki result set')
-        // return h.response(rikiResponse).code(202)
+                const data = JSON.stringify({
+                    summaryVC,
+                    encryptedVC
+                })
+
+                // write response to local DWN first
+                const response = await this.processDwnRequest({
+                    target: `${this.identity?.did}`,
+                    store: false,
+                    author: `${this.identity?.did}`,
+                    messageOptions: {
+                        data: Buffer.from(data),
+                        dataFormat: 'application/json',
+                        protocol: rikiProtocol.message.definition.protocol,
+                        protocolPath: 'createRequest/createResponse/reportRequest/reportResponse',
+                        schema: 'https://tblend.io/protocol/riki/report-response.schema.json',
+                        recipient: senderDid,
+                        //@ts-ignore Type is wrong?
+                        parentId: request.message.parentId,
+                        //@ts-ignore Type is wrong?
+                        contextId: request.message.contextId
+                    },
+                    messageType: DwnInterfaceName.Records + DwnMethodName.Write,
+                });
+
+                // TODO: this is a hack to make the authz match dwn-sdk 0.2.1. Can remove when web5-js uses a newer dwn-sdk
+                let message: any = Object.assign({}, response.message);
+                message.authorization = message.authorization.authorSignature;
+
+                // send the dwn response back to requesting DID
+                await this.client.send(senderDid, message as RecordsWriteMessage, data);
+
+                return {
+                    reply: {
+                        status: {
+                            code: 201,
+                            detail: 'Created'
+                        }
+
+                    }
+                };
+            } catch (e: any) {
+                console.error(e);
+
+                return {
+                    reply: this.messageReplyFromError(e, 500),
+                }
+            }
+        }
+
+        // request not done processing yet
+        return {
+            reply: {
+                status: {
+                    code: 202,
+                    detail: 'Accepted'
+                }
+
+            }
+        };
     }
 
     // TODO: Decryption should require payment
     async decryptRIKI(request: DwnRequest) {
-        console.log('Decrypt request', JSON.stringify(request, null, 2))
-        // const { jwt } = <{ jwt: string }>req.payload;
+        const { encryptedVC } = request.payload;
 
-        // if (!web5.identity) {
-        //     await web5.init({});
-        // }
+        try {
+            // @ts-ignore type is incorrect for signature due to web5-js using dwn-sdk 0.2.1
+            const signatureEntry = request.message.authorization.signatures[0];
+            const senderDid = this.getJwsSignerDid(signatureEntry);
 
-        // try {
-        //     const verified = await web5.verifyVC(jwt);
-        //     if (!verified) throw new Error('Invalid JWT');
+            const verified = await this.verifyVC(encryptedVC);
+            if (!verified) throw new Error('Invalid JWT');
 
-        //     const vc = web5.decodeVC(jwt);
+            const vc = this.decodeVC(encryptedVC);
 
-        //     const credentialSubject: any = vc.payload.vc?.credentialSubject;
+            const credentialSubject: any = vc.payload.vc?.credentialSubject;
 
-        //     const encrypted = credentialSubject?.encrypted;
-        //     const decrypted = decrypt(encrypted);
+            const encrypted = credentialSubject?.encrypted;
+            const decrypted = decrypt(encrypted);
 
-        //     const verifiableCredential = await web5.createVC({
-        //         credentialSubject: JSON.parse(decrypted.toString()),
-        //         subjectDid: '',
-        //         type: 'RIKIAnalyticsDecrypted'
-        //     });
+            const decryptedVC = await this.createVC({
+                credentialSubject: JSON.parse(decrypted.toString()),
+                subjectDid: '',
+                type: 'RIKIAnalyticsDecrypted'
+            });
 
-        //     return h.response({ verifiableCredential })
+            // write incoming message to dwn
+            await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
 
-        // } catch (e: any) {
-        //     console.error(e)
-        //     return h.response({ error: e.message }).code(500);
-        // }
+            const data = JSON.stringify({
+                decryptedVC
+            })
+
+            // write response to local DWN first
+            const response = await this.processDwnRequest({
+                target: `${this.identity?.did}`,
+                store: false,
+                author: `${this.identity?.did}`,
+                messageOptions: {
+                    data: Buffer.from(data),
+                    dataFormat: 'application/json',
+                    protocol: rikiProtocol.message.definition.protocol,
+                    protocolPath: 'decryptRequest/decryotResponse',
+                    schema: 'https://tblend.io/protocol/riki/decrypt-response.schema.json',
+                    recipient: senderDid,
+                    //@ts-ignore Type is wrong?
+                    parentId: request.message.parentId,
+                    //@ts-ignore Type is wrong?
+                    contextId: request.message.contextId
+                },
+                messageType: DwnInterfaceName.Records + DwnMethodName.Write,
+            });
+
+            // TODO: this is a hack to make the authz match dwn-sdk 0.2.1. Can remove when web5-js uses a newer dwn-sdk
+            let message: any = Object.assign({}, response.message);
+            message.authorization = message.authorization.authorSignature;
+
+            // send the dwn response back to requesting DID
+            await this.client.send(senderDid, message as RecordsWriteMessage, data);
+
+            return {
+                reply: {
+                    status: {
+                        code: 201,
+                        detail: 'Created'
+                    }
+
+                }
+            };
+
+        } catch (e: any) {
+            console.error(e)
+
+            return {
+                reply: this.messageReplyFromError(e, 500),
+            }
+        }
     }
 }

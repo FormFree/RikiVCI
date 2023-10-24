@@ -45,6 +45,11 @@ export const rikiProtocol = {
                     createResponse: {
                         $actions: [
                             // TODO: Only recipient of createRequest should be able to send createResponse
+                            // { 
+                            //     who: 'recipient', 
+                            //     of: 'createRequest', 
+                            //     can: 'write'
+                            // },
                             {
                                 who: 'anyone',
                                 can: 'write'
@@ -58,6 +63,11 @@ export const rikiProtocol = {
                         reportRequest: {
                             $actions: [
                                 // TODO: Only recipient of createResponse should be able to send reportRequest
+                                // { 
+                                //     who: 'recipient', 
+                                //     of: 'createResponse', 
+                                //     can: 'write'
+                                // },
                                 {
                                     who: 'anyone',
                                     can: 'write'
@@ -71,6 +81,11 @@ export const rikiProtocol = {
                             reportResponse: {
                                 $actions: [
                                     // TODO: Only recipient of reportRequest should be able to send response
+                                    // { 
+                                    //     who: 'recipient', 
+                                    //     of: 'reportRequest', 
+                                    //     can: 'write'
+                                    // },
                                     {
                                         who: 'anyone',
                                         can: 'write'
@@ -100,6 +115,11 @@ export const rikiProtocol = {
                     decryptResponse: {
                         $actions: [
                             // TODO: Only recipient of decryptRequest should be able to send response
+                            // { 
+                            //     who: 'recipient', 
+                            //     of: 'decryptRequest', 
+                            //     can: 'write'
+                            // },
                             {
                                 who: 'anyone',
                                 can: 'write'
