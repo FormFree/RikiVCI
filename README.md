@@ -12,9 +12,7 @@ The json-schemas directory is served over http as `/protocol`
 
 The protocol definition itself is not currently served over http, but is in the protocol project directory.
 
-## Documentation
-
-Start the service, then view the generated API document
+## Running the service
 
 ```sh
 npm install
