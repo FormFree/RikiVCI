@@ -88,6 +88,7 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
 
             // Loop through all transaction VCs and find transactions for account
             for (const transactionVC of transactionVCs) {
+                console.log('Transaction VC', JSON.stringify(transactionVC, null, 2))
                 const transactionVCSubject = transactionVC.payload.credentialSubject as any;
                 if (transactionVCSubject.id.includes(account[accountType].accountId)) {
                     for (const transaction of transactionVCSubject.transactions) {

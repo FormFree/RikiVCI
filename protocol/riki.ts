@@ -4,33 +4,33 @@ export const rikiProtocol = {
             protocol: 'https://tblend.io/protocol/riki',
             published: false,
             types: {
-                rikiCreateRequest: {
+                createRequest: {
                     schema: 'https://tblend.io/protocol/riki/create-request.schema.json',
                     dataFormats: ['application/json'],
                 },
-                rikiCreateResponse: {
+                createResponse: {
                     schema: 'https://tblend.io/protocol/riki/create-response.schema.json',
                     dataFormats: ['application/json'],
                 },
-                rikiDecryptRequest: {
+                decryptRequest: {
                     schema: 'https://tblend.io/protocol/riki/decrypt-request.schema.json',
                     dataFormats: ['application/json'],
                 },
-                rikiDecryptResponse: {
+                decryptResponse: {
                     schema: 'https://tblend.io/protocol/riki/decrypt-response.schema.json',
                     dataFormats: ['application/json'],
                 },
-                rikiReportRequest: {
+                reportRequest: {
                     schema: 'https://tblend.io/protocol/riki/report-request.schema.json',
                     dataFormats: ['application/json'],
                 },
-                rikiReportResponse: {
+                reportResponse: {
                     schema: 'https://tblend.io/protocol/riki/report-response.schema.json',
                     dataFormats: ['application/json'],
                 },
             },
             structure: {
-                rikiCreateRequest: {
+                createRequest: {
                     $actions: [
                         {
                             who: 'anyone',
@@ -38,25 +38,54 @@ export const rikiProtocol = {
                         },
                         {
                             who: 'recipient',
-                            of: 'rikiCreateRequest',
+                            of: 'createRequest',
                             can: 'read'
                         }
                     ],
-                    rikiCreateResponse: {
+                    createResponse: {
                         $actions: [
+                            // TODO: Only recipient of createRequest should be able to send createResponse
                             {
                                 who: 'anyone',
                                 can: 'write'
                             },
                             {
                                 who: 'recipient',
-                                of: 'rikiCreateResponse',
+                                of: 'createResponse',
                                 can: 'read'
                             },
-                        ]
+                        ],
+                        reportRequest: {
+                            $actions: [
+                                // TODO: Only recipient of createResponse should be able to send reportRequest
+                                {
+                                    who: 'anyone',
+                                    can: 'write'
+                                },
+                                {
+                                    who: 'recipient',
+                                    of: 'reportRequest',
+                                    can: 'read'
+                                }
+                            ],
+                            reportResponse: {
+                                $actions: [
+                                    // TODO: Only recipient of reportRequest should be able to send response
+                                    {
+                                        who: 'anyone',
+                                        can: 'write'
+                                    },
+                                    {
+                                        who: 'recipient',
+                                        of: 'reportResponse',
+                                        can: 'read'
+                                    }
+                                ]
+                            },
+                        },
                     },
                 },
-                rikiDecryptRequest: {
+                decryptRequest: {
                     $actions: [
                         {
                             who: 'anyone',
@@ -64,41 +93,24 @@ export const rikiProtocol = {
                         },
                         {
                             who: 'recipient',
-                            of: 'rikiDecryptRequest',
+                            of: 'decryptRequest',
                             can: 'read'
                         }
-                    ]
-                },
-                rikiDecryptResponse: {
-                    $actions: [
-                        {
-                            who: 'recipient',
-                            of: 'rikiDecryptResponse',
-                            can: 'read'
-                        }
-                    ]
-                },
-                rikiReportRequest: {
-                    $actions: [
-                        {
-                            who: 'anyone',
-                            can: 'write'
-                        },
-                        {
-                            who: 'recipient',
-                            of: 'rikiReportRequest',
-                            can: 'read'
-                        }
-                    ]
-                },
-                rikiReportResponse: {
-                    $actions: [
-                        {
-                            who: 'recipient',
-                            of: 'rikiReportResponse',
-                            can: 'read'
-                        }
-                    ]
+                    ],
+                    decryptResponse: {
+                        $actions: [
+                            // TODO: Only recipient of decryptRequest should be able to send response
+                            {
+                                who: 'anyone',
+                                can: 'write'
+                            },
+                            {
+                                who: 'recipient',
+                                of: 'decryptResponse',
+                                can: 'read'
+                            }
+                        ]
+                    },
                 },
             },
         },

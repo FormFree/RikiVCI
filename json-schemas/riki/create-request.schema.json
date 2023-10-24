@@ -26,6 +26,8 @@
         }
     },
     "required": [
-        "verifiablePresentation"
+        "accountVCs",
+        "identityVCs",
+        "transactionVCs"
     ]
 }
