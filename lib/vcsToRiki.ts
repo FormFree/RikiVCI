@@ -37,9 +37,9 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
 
     // Use first identity VC for parsing identity
     const identityVC = identityVCs[0];
-    const identityVCSubject = identityVC.payload.credentialSubject as any;
+    const identityVCSubject = identityVC.payload.vc.credentialSubject as any;
 
-    // console.log('Identity VC', identityVCSubject);
+    // console.log('Identity VC', JSON.stringify(identityVCSubject, null, 2))
 
     // get RIKI consumer info from identity VC
     const consumerInformation = {
@@ -63,7 +63,9 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
     const accounts: RIKIAccount[] = [];
 
     for (const accountVC of accountVCs) {
-        const accountVCSubject = accountVC.payload.credentialSubject as any;
+        const accountVCSubject = accountVC.payload.vc.credentialSubject as any;
+        console.log('Account VC', JSON.stringify(accountVCSubject, null, 2))
+
         for (const account of accountVCSubject.accounts) {
             const rikiTransactions: RIKITransaction[] = [];
             let rikiAccount: RIKIAccount;
@@ -88,8 +90,8 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
 
             // Loop through all transaction VCs and find transactions for account
             for (const transactionVC of transactionVCs) {
-                console.log('Transaction VC', JSON.stringify(transactionVC, null, 2))
-                const transactionVCSubject = transactionVC.payload.credentialSubject as any;
+                // console.log('Transaction VC', JSON.stringify(transactionVC, null, 2))
+                const transactionVCSubject = transactionVC.payload.vc.credentialSubject as any;
                 if (transactionVCSubject.id.includes(account[accountType].accountId)) {
                     for (const transaction of transactionVCSubject.transactions) {
                         let rikiTransaction: RIKITransaction;
@@ -114,7 +116,7 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
                             externalTransactionId: transaction[transactionType].transactionId,
                             date: transaction[transactionType].transactionTimestamp,
                             description: transaction[transactionType].description,
-                            action: transaction[transactionType].debitCreditMemo.toLowerCase(),
+                            action: transaction[transactionType].transactionType.toLowerCase(),
                             amount: transaction[transactionType].amount
                         }
 
@@ -141,7 +143,7 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
                 accountNumber: account[accountType].accountNumber,
                 accountType: accountTypeString,
                 currencyCode: account[accountType].currency,
-                dataSourceId: "", // TODO: Not sure what this is
+                dataSourceId: account[accountType].accountId,
                 externalAccountId: account[accountType].accountId,
                 currentBalance: account[accountType].currentBalance,
                 currentBalanceDate: account[accountType].balanceAsOf,

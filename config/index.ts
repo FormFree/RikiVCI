@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import 'dotenv/config';
 
 const environment =
-    process.env.ENVIRONMENT || "demo"; // or development, production 
+    process.env.ENVIRONMENT || "development"; // development, production 
 
 let scheme = "https";
 const externalHostname = process.env.EXTERNAL_HOSTNAME || "localhost";

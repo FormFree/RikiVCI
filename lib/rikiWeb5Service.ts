@@ -47,55 +47,35 @@ export class Web5RikiService extends Web5Service {
             const signatureEntry = request.message.authorization.signatures[0];
             const senderDid = this.getJwsSignerDid(signatureEntry);
 
-            // TODO: temporarily disabled verifying vcs
-            // for (const credential of [...accountVCs, ...identityVCs, ...transactionVCs]) {
-            //     // TODO: Temporary fix for extra tilde
-            //     let cleanedCredential = credential as string;
-            //     cleanedCredential = cleanedCredential.replace("~", "");
-
-            //     await this.verifyVC(cleanedCredential);
-            //     // await this.verifyVC(credential);
-            // }
+            for (const credential of [...accountVCs, ...identityVCs, ...transactionVCs]) {
+                await this.verifyVC(credential);
+            }
 
             const accountVCsJSON = accountVCs.map((jwt: string) => this.decodeVC(jwt));
             const identityVCsJSON = identityVCs.map((jwt: string) => this.decodeVC(jwt));
             const transactionVCsJSON = transactionVCs.map((jwt: string) => this.decodeVC(jwt));
 
-            // TODO: Temporary for demo
-            let rikiRequest;
-            if (config.environment === 'Development') {
-                rikiRequest = jethro;
-            } else {
-                rikiRequest = convertVCsToRikiRequest({ accountVCs: accountVCsJSON, identityVCs: identityVCsJSON, transactionVCs: transactionVCsJSON });
-            }
+            let rikiRequest = convertVCsToRikiRequest({ accountVCs: accountVCsJSON, identityVCs: identityVCsJSON, transactionVCs: transactionVCsJSON });
+            // console.log('Generated RIKI Request', JSON.stringify(rikiRequest, null, 2));
 
             const customerId = uuidv4();
 
-            // TODO: Temporary for demo
-            let rikiResponse;
-            if (config.environment === 'demo') {
-                rikiResponse = {
-                    isSuccessful: true,
-                    timeOfRequest: '2023-09-28T17:29:38.7484069Z',
-                    status: 'Recieved',
-                    rikiId: 'riki_c2588f30-dc43-4219-ae1f-abf6b1da4fe4'
+            // Request RIKI report
+            const rikiResponseRaw = await fetch(`${config.rikiAPI}`, {
+                method: 'POST',
+                body: JSON.stringify(rikiRequest),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CustomerId': customerId
                 }
-            } else {
-                // Request RIKI report
-                const rikiResponseRaw = await fetch(`${config.rikiAPI}`, {
-                    method: 'POST',
-                    body: JSON.stringify(rikiRequest),
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CustomerId': customerId
-                    }
-                })
+            })
 
-                rikiResponse = await rikiResponseRaw.json();
-            }
+            const rikiResponse = await rikiResponseRaw.json();
+            console.log('Got RIKI Response', JSON.stringify(rikiResponse, null, 2));
 
             // write incoming message to dwn
             await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
+            console.log('Wrote incoming request to DWN')
 
             const data = JSON.stringify({
                 customerId,
@@ -121,13 +101,15 @@ export class Web5RikiService extends Web5Service {
                 },
                 messageType: DwnInterfaceName.Records + DwnMethodName.Write,
             });
+            console.log('Wrote outgoing response to DWN')
 
             // TODO: this is a hack to make the authz match dwn-sdk 0.2.1. Can remove when web5-js uses a newer dwn-sdk
             let message: any = Object.assign({}, response.message);
             message.authorization = message.authorization.authorSignature;
 
             // send the dwn response back to requesting DID
-            await this.client.send(senderDid, message as RecordsWriteMessage, data);
+            const dwnResponse = await this.client.send(senderDid, message as RecordsWriteMessage, data);
+            console.log('Wrote outgoing response to user DWN', dwnResponse)
 
             return {
                 reply: {
@@ -154,22 +136,17 @@ export class Web5RikiService extends Web5Service {
         const signatureEntry = request.message.authorization.signatures[0];
         const senderDid = this.getJwsSignerDid(signatureEntry);
 
-        // TODO: temporary for demo
-        let rikiResponse;
-        if (config.environment === 'demo') {
-            rikiResponse = jethroRes.rikiResponse;
-        } else {
-            // Get RIKI report
-            const rikiResponseRaw = await fetch(`${config.rikiAPI}/${rikiId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CustomerId': customerId
-                }
-            })
+        // Get RIKI report
+        const rikiResponseRaw = await fetch(`${config.rikiAPI}/${rikiId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CustomerId': customerId
+            }
+        })
 
-            rikiResponse = await rikiResponseRaw.json();
-        }
+        const rikiResponse = await rikiResponseRaw.json();
+        console.log('RIKI Response', rikiResponse);
 
         if (rikiResponse.rikiResultSet) {
 
@@ -210,7 +187,7 @@ export class Web5RikiService extends Web5Service {
                         schema: 'https://tblend.io/protocol/riki/report-response.schema.json',
                         recipient: senderDid,
                         //@ts-ignore Type is wrong?
-                        parentId: request.message.parentId,
+                        parentId: request.message.recordId,
                         //@ts-ignore Type is wrong?
                         contextId: request.message.contextId
                     },
@@ -295,11 +272,11 @@ export class Web5RikiService extends Web5Service {
                     data: Buffer.from(data),
                     dataFormat: 'application/json',
                     protocol: rikiProtocol.message.definition.protocol,
-                    protocolPath: 'decryptRequest/decryotResponse',
+                    protocolPath: 'decryptRequest/decryptResponse',
                     schema: 'https://tblend.io/protocol/riki/decrypt-response.schema.json',
                     recipient: senderDid,
                     //@ts-ignore Type is wrong?
-                    parentId: request.message.parentId,
+                    parentId: request.message.recordId,
                     //@ts-ignore Type is wrong?
                     contextId: request.message.contextId
                 },
