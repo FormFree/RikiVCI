@@ -74,15 +74,15 @@ export class Web5RikiService extends Web5Service {
             console.log('Got RIKI Response', JSON.stringify(rikiResponse, null, 2));
 
             // write incoming message to dwn
-            await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
-            console.log('Wrote incoming request to DWN')
+            // await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
+            // console.log('Wrote incoming request to DWN')
 
             const data = JSON.stringify({
                 customerId,
                 rikiId: rikiResponse.rikiId
             })
 
-            // write response to local DWN first
+            // create response for DWN
             const response = await this.processDwnRequest({
                 target: `${this.identity?.did}`,
                 store: false,
@@ -101,7 +101,6 @@ export class Web5RikiService extends Web5Service {
                 },
                 messageType: DwnInterfaceName.Records + DwnMethodName.Write,
             });
-            console.log('Wrote outgoing response to DWN')
 
             // TODO: this is a hack to make the authz match dwn-sdk 0.2.1. Can remove when web5-js uses a newer dwn-sdk
             let message: any = Object.assign({}, response.message);
@@ -109,7 +108,7 @@ export class Web5RikiService extends Web5Service {
 
             // send the dwn response back to requesting DID
             const dwnResponse = await this.client.send(senderDid, message as RecordsWriteMessage, data);
-            console.log('Wrote outgoing response to user DWN', dwnResponse)
+            console.log('Wrote RIKI response to user DWN', response.message, dwnResponse)
 
             return {
                 reply: {
@@ -166,14 +165,14 @@ export class Web5RikiService extends Web5Service {
                 })
 
                 // write incoming message to dwn
-                await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
+                // await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
 
                 const data = JSON.stringify({
                     summaryVC,
                     encryptedVC
                 })
 
-                // write response to local DWN first
+                // create response for DWN
                 const response = await this.processDwnRequest({
                     target: `${this.identity?.did}`,
                     store: false,
