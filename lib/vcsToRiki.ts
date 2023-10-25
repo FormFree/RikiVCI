@@ -64,7 +64,7 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
 
     for (const accountVC of accountVCs) {
         const accountVCSubject = accountVC.payload.vc.credentialSubject as any;
-        console.log('Account VC', JSON.stringify(accountVCSubject, null, 2))
+        // console.log('Account VC', JSON.stringify(accountVCSubject, null, 2))
 
         for (const account of accountVCSubject.accounts) {
             const rikiTransactions: RIKITransaction[] = [];

@@ -9,25 +9,6 @@ import transactionVC5 from './assets/transactionVC5.json' assert { type: 'json' 
 import config from '../config/index.js';
 import { Web5RikiService } from '../lib/rikiWeb5Service.js';
 
-
 describe('Riki Web5Service', () => {
 
-    let web5Service = new Web5RikiService();
-
-    before(async () => {
-        await web5Service.start({
-            configFile: config.web5Configfile,
-            levelDbDir: config.levelDbDir,
-            dwnServiceEndpoints: config.dwnServiceEndpoints,
-            port: config.port,
-        });
-    });
-
-    after(async () => {
-        await web5Service.stop();
-    });
-
-    it('should accept Verifiable Presentation', async () => {
-        return true;
-    })
 })

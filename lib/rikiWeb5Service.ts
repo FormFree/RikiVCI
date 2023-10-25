@@ -146,7 +146,6 @@ export class Web5RikiService extends Web5Service {
         })
 
         const rikiResponse = await rikiResponseRaw.json();
-        console.log('RIKI Response', rikiResponse);
 
         if (rikiResponse.rikiResultSet) {
 
