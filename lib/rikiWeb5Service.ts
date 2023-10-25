@@ -255,7 +255,7 @@ export class Web5RikiService extends Web5Service {
             });
 
             // write incoming message to dwn
-            await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
+            // await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
 
             const data = JSON.stringify({
                 decryptedVC
