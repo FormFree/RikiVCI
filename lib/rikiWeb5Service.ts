@@ -3,15 +3,10 @@ import config from '../config/index.js'
 import { Web5Service, DwnRequest, DwnResponse } from 'web5-service';
 import { DwnInterfaceName, DwnMethodName, RecordsWriteMessage } from '@tbd54566975/dwn-sdk-js';
 import { Temporal } from '@js-temporal/polyfill';
-
-import { encrypt, decrypt } from './encryption.js'
-
 import { v4 as uuidv4 } from 'uuid';
 
 import { convertVCsToRikiRequest } from './vcsToRiki.js';
-
-import jethro from '../test/assets/jethroTull_request.json' assert { type: 'json' };
-import jethroRes from '../test/assets/rikiResJethro.json' assert { type: 'json' };
+import { encrypt, decrypt } from './encryption.js'
 import { rikiProtocol } from '../protocol/riki.js';
 
 const isRikiCreateRequest = (dwnRequest: any) => dwnRequest.message.descriptor.interface === 'Records' &&
@@ -28,6 +23,15 @@ const isRikiDecryptRequest = (dwnRequest: any) => dwnRequest.message.descriptor.
 
 export function getCurrentTimeInHighPrecision(): string {
     return Temporal.Now.instant().toString({ smallestUnit: 'microseconds' });
+}
+
+const messageReplyAccepted = {
+    reply: {
+        status: {
+            code: 202,
+            detail: 'Accepted'
+        }
+    }
 }
 
 export class Web5RikiService extends Web5Service {
@@ -56,7 +60,6 @@ export class Web5RikiService extends Web5Service {
             const transactionVCsJSON = transactionVCs.map((jwt: string) => this.decodeVC(jwt));
 
             let rikiRequest = convertVCsToRikiRequest({ accountVCs: accountVCsJSON, identityVCs: identityVCsJSON, transactionVCs: transactionVCsJSON });
-            // console.log('Generated RIKI Request', JSON.stringify(rikiRequest, null, 2));
 
             const customerId = uuidv4();
 
@@ -72,10 +75,6 @@ export class Web5RikiService extends Web5Service {
 
             const rikiResponse = await rikiResponseRaw.json();
             console.log('Got RIKI Response', JSON.stringify(rikiResponse, null, 2));
-
-            // write incoming message to dwn
-            // await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
-            // console.log('Wrote incoming request to DWN')
 
             const data = JSON.stringify({
                 customerId,
@@ -110,15 +109,8 @@ export class Web5RikiService extends Web5Service {
             const dwnResponse = await this.client.send(senderDid, message as RecordsWriteMessage, data);
             console.log('Wrote RIKI response to user DWN', response.message, dwnResponse)
 
-            return {
-                reply: {
-                    status: {
-                        code: 202,
-                        detail: 'Accepted'
-                    }
+            return messageReplyAccepted;
 
-                }
-            };
         } catch (e: any) {
             console.error(e);
 
@@ -164,9 +156,6 @@ export class Web5RikiService extends Web5Service {
                     type: 'RIKIAnalyticsEncrypted'
                 })
 
-                // write incoming message to dwn
-                // await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
-
                 const data = JSON.stringify({
                     summaryVC,
                     encryptedVC
@@ -198,16 +187,6 @@ export class Web5RikiService extends Web5Service {
 
                 // send the dwn response back to requesting DID
                 await this.client.send(senderDid, message as RecordsWriteMessage, data);
-
-                return {
-                    reply: {
-                        status: {
-                            code: 201,
-                            detail: 'Created'
-                        }
-
-                    }
-                };
             } catch (e: any) {
                 console.error(e);
 
@@ -217,16 +196,7 @@ export class Web5RikiService extends Web5Service {
             }
         }
 
-        // request not done processing yet
-        return {
-            reply: {
-                status: {
-                    code: 202,
-                    detail: 'Accepted'
-                }
-
-            }
-        };
+        return messageReplyAccepted;
     }
 
     // TODO: Decryption should require payment
@@ -253,9 +223,6 @@ export class Web5RikiService extends Web5Service {
                 subjectDid: '',
                 type: 'RIKIAnalyticsDecrypted'
             });
-
-            // write incoming message to dwn
-            // await this.dwn?.processMessage(`${this.identity?.did}`, request.message, request.payload);
 
             const data = JSON.stringify({
                 decryptedVC
@@ -288,15 +255,7 @@ export class Web5RikiService extends Web5Service {
             // send the dwn response back to requesting DID
             await this.client.send(senderDid, message as RecordsWriteMessage, data);
 
-            return {
-                reply: {
-                    status: {
-                        code: 201,
-                        detail: 'Created'
-                    }
-
-                }
-            };
+            return messageReplyAccepted;
 
         } catch (e: any) {
             console.error(e)
