@@ -39,8 +39,6 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
     const identityVC = identityVCs[0];
     const identityVCSubject = identityVC.payload.vc.credentialSubject as any;
 
-    // console.log('Identity VC', JSON.stringify(identityVCSubject, null, 2))
-
     // get RIKI consumer info from identity VC
     const consumerInformation = {
         firstName: identityVCSubject.customer.name.first,
@@ -63,10 +61,17 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
     const accounts: RIKIAccount[] = [];
 
     for (const accountVC of accountVCs) {
-        const accountVCSubject = accountVC.payload.vc.credentialSubject as any;
-        // console.log('Account VC', JSON.stringify(accountVCSubject, null, 2))
+        let institution: RIKIInstitution = {
+            externalInstitutionId: "",
+            name: "",
+            accounts
+        }
 
+        const accountVCSubject = accountVC.payload.vc.credentialSubject as any;
         for (const account of accountVCSubject.accounts) {
+            institution.externalInstitutionId = account.fiAttributes.institution_id;
+            institution.name = account.fiAttributes.institution_name;
+
             const rikiTransactions: RIKITransaction[] = [];
             let rikiAccount: RIKIAccount;
             let accountType = "";
@@ -152,17 +157,11 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
                 transactions: rikiTransactions
             }
 
-            accounts.push(rikiAccount);
+            institution.accounts.push(rikiAccount);
         }
-    }
 
-    const institution: RIKIInstitution = {
-        externalInstitutionId: "", // TODO: Cannot get from VC?
-        name: "", // TODO: Cannot get from VC?
-        accounts
+        institutions.push(institution)
     }
-
-    institutions.push(institution)
 
     return {
         requestType: "RIKI",
