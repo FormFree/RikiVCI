@@ -1,6 +1,6 @@
 # RIKI Verifiable Credential Issuer
 
-This project is based on [Web5Service](https://github.com/TBD54566975/incubation-tblend)
+This project is based on [Verifiable Credential Issuer](https://github.com/TBD54566975/incubation-tblend)
 
 ## Running the service
 
