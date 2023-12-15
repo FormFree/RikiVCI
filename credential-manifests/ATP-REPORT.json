@@ -1,0 +1,49 @@
+{
+    "id": "ATP-REPORT",
+    "spec_version": "https://identity.foundation/credential-manifest/spec/v1.0.0/",
+    "issuer": {
+        "id": "[replaced dynamically]",
+        "name": "FormFree RIKI ATP"
+    },
+    "output_descriptors": [
+        {
+            "id": "atp-report",
+            "name": "ATP Report",
+            "schema": "https://formfree.com/schemas/ATPReportCredential"
+        }
+    ],
+    "format": {
+        "jwt_vc": {
+            "alg": [
+                "EdDSA"
+            ]
+        }
+    },
+    "presentation_definition": {
+        "id": "atp-report-encrypted",
+        "input_descriptors": [
+            {
+                "id": "atp-report-encrypted",
+                "purpose": "Report to decrypt",
+                "constraints": {
+                    "fields": [
+                        {
+                            "path": [
+                                "$.type"
+                            ],
+                            "filter": {
+                                "type": "string",
+                                "pattern": "^ATPReportEncrypted$"
+                            }
+                        },
+                        {
+                            "path": [
+                                "$.credentialSubject.encrypted"
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

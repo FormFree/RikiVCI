@@ -1,0 +1,110 @@
+{
+    "id": "ATP-DATA",
+    "spec_version": "https://identity.foundation/credential-manifest/spec/v1.0.0/",
+    "issuer": {
+        "id": "[replaced dynamically]",
+        "name": "FormFree RIKI ATP"
+    },
+    "output_descriptors": [
+        {
+            "id": "atp-report-summary",
+            "name": "ATP Report - Summary",
+            "schema": "https://formfree.com/schemas/ATPSummaryCredential"
+        },
+        {
+            "id": "atp-report-encrypted",
+            "name": "ATP Report - Encrypted",
+            "schema": "https://formfree.com/schemas/ATPEncryptedReportCredential"
+        }
+    ],
+    "format": {
+        "jwt_vc": {
+            "alg": [
+                "EdDSA"
+            ]
+        }
+    },
+    "presentation_definition": {
+        "id": "financial-data",
+        "input_descriptors": [
+            {
+                "id": "financial-identity",
+                "purpose": "Identity information provided by financial institution",
+                "constraints": {
+                    "fields": [
+                        {
+                            "path": [
+                                "$.type"
+                            ],
+                            "filter": {
+                                "type": "string",
+                                "pattern": "^IdentityCredential$"
+                            }
+                        },
+                        {
+                            "path": [
+                                "$.credentialSubject.customer.customerId",
+                                "$.credentialSubject.customer.name.first",
+                                "$.credentialSubject.customer.name.last",
+                                "$.credentialSubject.customer.name.middle",
+                                "$.credentialSubject.customer.name.prefix",
+                                "$.credentialSubject.customer.name.suffix",
+                                "$.credentialSubject.customer.addresses[0].line1",
+                                "$.credentialSubject.customer.addresses[0].city",
+                                "$.credentialSubject.customer.addresses[0].state",
+                                "$.credentialSubject.customer.addresses[0].country",
+                                "$.credentialSubject.customer.addresses[0].postalCode",
+                                "$.credentialSubject.customer.email[0]",
+                                "$.credentialSubject.customer.phone[0].number"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "financial-accounts",
+                "purpose": "Accounts information provided by a financial institution",
+                "constraints": {
+                    "fields": [
+                        {
+                            "path": [
+                                "$.type"
+                            ],
+                            "filter": {
+                                "type": "string",
+                                "pattern": "^BankAccountCredential$"
+                            }
+                        },
+                        {
+                            "path": [
+                                "$.credentialSubject.accounts[0]"
+                            ]
+                        }
+                    ]
+                }
+            },
+            {
+                "id": "financial-transactions",
+                "purpose": "Transaction information provided by a financial institution",
+                "constraints": {
+                    "fields": [
+                        {
+                            "path": [
+                                "$.type"
+                            ],
+                            "filter": {
+                                "type": "string",
+                                "pattern": "^BankTransactionCredential$"
+                            }
+                        },
+                        {
+                            "path": [
+                                "$.credentialSubject.transactions[0]"
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

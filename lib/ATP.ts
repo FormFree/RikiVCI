@@ -1,5 +1,13 @@
+import { Signer } from "verifiable-credential-issuer";
+import { PresentationExchange, VerifiableCredential } from '@web5/credentials';
+
+import { retry } from './util';
+
+import ATPDataManifest from "../credential-manifests/ATP-DATA.json";
+import ATPReportManifest from "../credential-manifests/ATP-REPORT.json";
+
 import config from "../config/index.js"
-import { VerifiableCredentialTypeV1 } from 'web5-service'
+import { decrypt, encrypt } from "./encryption";
 
 type RIKITransaction = {
     externalTransactionId: string;
@@ -28,8 +36,99 @@ type RIKIInstitution = {
     accounts: RIKIAccount[];
 }
 
-export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], transactionVCs = [] }: { identityVCs: VerifiableCredentialTypeV1[], accountVCs: VerifiableCredentialTypeV1[], transactionVCs: VerifiableCredentialTypeV1[] }) {
+export async function requestAndAwaitRIKI(presentation: any, issuerDid: string, subjectDid: string, kid: string, signer: Signer) {
+    // validate each credential
+    for (const credential of presentation.verifiableCredential) {
+        await VerifiableCredential.verify(credential);
+    }
+
+    // filter valid creds
+    const selectedCreds = PresentationExchange.selectCredentials(presentation, ATPDataManifest.presentation_definition)
+
     const trustedIssuers = config.trustedIssuers.map(o => o.did);
+
+    const identityVCs = []
+    const accountVCs = []
+    const transactionVCs = []
+
+    for (const credentialJwt in selectedCreds) {
+        const vc = VerifiableCredential.parseJwt(credentialJwt);
+        // TODO: Verify credential subject id is same as subjectId
+        // console.log('vcJson', vc.vcDataModel.credentialSubject);
+
+        const issuerDid = vc.vcDataModel.issuer;
+
+        if (trustedIssuers.includes(issuerDid as string)) {
+            if (vc.vcDataModel.type.includes('IdentityCredential')) {
+                identityVCs.push(vc);
+            } else if (vc.vcDataModel.type.includes('BankAccountCredential')) {
+                accountVCs.push(vc);
+            } else if (vc.vcDataModel.type.includes('TransactionCredential')) {
+                transactionVCs.push(vc);
+            }
+        }
+    }
+
+    const rikiRequest = convertVCsToRikiRequest({ identityVCs, accountVCs, transactionVCs });
+
+    // request riki report
+    const rikiRequestResponse = await requestRIKI(rikiRequest);
+
+    // await report to be generated
+    const rikiReportResponse = await retry(async () => {
+        return await getRIKI(rikiRequestResponse);
+    }, { retries: 20, retryIntervalMs: 1500 })
+
+    // generate VCs
+    const summaryVC = VerifiableCredential.create({
+        type: 'ATPReportSummary',
+        issuer: issuerDid,
+        subject: subjectDid,
+        data: rikiReportResponse.rikiResultSet.rikiData,
+    });
+
+    const signOptions = {
+        issuerDid,
+        subjectDid,
+        kid,
+        signer
+    };
+
+    const summaryVCJwt = await summaryVC.sign(signOptions);
+
+    const unencrypted = JSON.stringify(rikiReportResponse.rikiResultSet);
+    const encrypted = encrypt(unencrypted);
+
+    const encryptedVC = VerifiableCredential.create({
+        type: 'ATPReportEncrypted',
+        issuer: issuerDid,
+        subject: subjectDid,
+        data: { encrypted },
+    });
+
+    const encryptedVCJwt = await encryptedVC.sign(signOptions);
+
+    return {
+        fulfillment: {
+            descriptor_map: [
+                {
+                    "id": "atp-report-summary",
+                    "format": "jwt_vc",
+                    "path": "$.verifiableCredential[0]"
+                },
+                {
+                    "id": "atp-report-encrypted",
+                    "format": "jwt_vc",
+                    "path": "$.verifiableCredential[1]"
+                },
+            ]
+        },
+        verifiableCredential: [summaryVCJwt, encryptedVCJwt]
+    }
+
+}
+
+export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], transactionVCs = [] }: { identityVCs: VerifiableCredential[], accountVCs: VerifiableCredential[], transactionVCs: VerifiableCredential[] }) {
 
     if (!identityVCs.length || !accountVCs.length || transactionVCs.length == 0) {
         throw new Error('Please provide IdentityCredential, BankAccountCredential, and transactions credential')
@@ -37,7 +136,7 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
 
     // Use first identity VC for parsing identity
     const identityVC = identityVCs[0];
-    const identityVCSubject = identityVC.payload.vc.credentialSubject as any;
+    const identityVCSubject = identityVC.vcDataModel.credentialSubject as any;
 
     // get RIKI consumer info from identity VC
     const consumerInformation = {
@@ -67,10 +166,8 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
             accounts
         }
 
-        const accountVCSubject = accountVC.payload.vc.credentialSubject as any;
+        const accountVCSubject = accountVC.vcDataModel.credentialSubject as any;
         for (const account of accountVCSubject.accounts) {
-            institution.externalInstitutionId = account.fiAttributes.institution_id;
-            institution.name = account.fiAttributes.institution_name;
 
             const rikiTransactions: RIKITransaction[] = [];
             let rikiAccount: RIKIAccount;
@@ -93,10 +190,13 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
                 throw new Error('Cannot determine the account type')
             }
 
+            institution.externalInstitutionId = account[accountType].fiAttributes.institution_id;
+            institution.name = account[accountType].fiAttributes.institution_name;
+
             // Loop through all transaction VCs and find transactions for account
             for (const transactionVC of transactionVCs) {
                 // console.log('Transaction VC', JSON.stringify(transactionVC, null, 2))
-                const transactionVCSubject = transactionVC.payload.vc.credentialSubject as any;
+                const transactionVCSubject = transactionVC.vcDataModel.credentialSubject as any;
                 if (transactionVCSubject.id.includes(account[accountType].accountId)) {
                     for (const transaction of transactionVCSubject.transactions) {
                         let rikiTransaction: RIKITransaction;
@@ -171,3 +271,94 @@ export function convertVCsToRikiRequest({ identityVCs = [], accountVCs = [], tra
     }
 }
 
+export async function requestRIKI(rikiRequest: any) {
+    // TODO: Use DID for customer ID?
+    const customerId = crypto.randomUUID();
+
+    // Request RIKI report
+    const rikiResponseRaw = await fetch(`${config.rikiAPI}`, {
+        method: 'POST',
+        body: JSON.stringify(rikiRequest),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CustomerId': customerId
+        }
+    })
+
+    const rikiResponse = await rikiResponseRaw.json();
+    console.log('Got RIKI Response', JSON.stringify(rikiResponse, null, 2));
+
+    const response = {
+        customerId,
+        rikiId: rikiResponse.rikiId
+    }
+
+    return response;
+}
+
+export async function getRIKI(rikiResponse: any) {
+    const { customerId, rikiId } = rikiResponse;
+
+    // Get RIKI report
+    const rikiResponseRaw = await fetch(`${config.rikiAPI}/${rikiId}`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CustomerId': customerId
+        }
+    })
+
+    const rikiReportResponse = await rikiResponseRaw.json();
+
+    if (!rikiReportResponse.rikiResultSet) {
+        throw new Error('RIKI report not ready')
+    }
+    return rikiReportResponse;
+}
+
+// TODO: Decryption should require payment
+export async function decryptRIKI(presentation: any, issuerDid: string, subjectDid: string, kid: string, signer: Signer) {
+    for (const credential of presentation.verifiableCredential) {
+        await VerifiableCredential.verify(credential);
+    }
+
+    // filter valid creds
+    const selectedCreds = PresentationExchange.selectCredentials(presentation, ATPReportManifest.presentation_definition)
+
+    const credentialJwt = selectedCreds[0];
+    const vc = VerifiableCredential.parseJwt(credentialJwt);
+    const credentialSubject: any = vc.vcDataModel.credentialSubject;
+
+    const encrypted = credentialSubject?.encrypted;
+    const decrypted = decrypt(encrypted);
+
+    // generate VCs
+    const decryptedVC = VerifiableCredential.create({
+        type: 'ATPReport',
+        issuer: issuerDid,
+        subject: subjectDid,
+        data: JSON.parse(decrypted.toString()),
+    });
+
+    const signOptions = {
+        issuerDid,
+        subjectDid,
+        kid,
+        signer
+    };
+
+    const decryptedVCJwt = await decryptedVC.sign(signOptions);
+
+    return {
+        fulfillment: {
+            descriptor_map: [
+                {
+                    "id": "atp-report",
+                    "format": "jwt_vc",
+                    "path": "$.verifiableCredential[0]"
+                },
+            ]
+        },
+        verifiableCredential: [decryptedVCJwt]
+    }
+}
